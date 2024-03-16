@@ -1,9 +1,15 @@
 import streamlit as st
 from pymongo import MongoClient
 from datetime import datetime
+from dotenv import load_dotenv
+import os
 
-# MongoDB Atlas connection URI
-uri = "mongodb+srv://iot_project:iot@cluster0.xn1d2wy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+load_dotenv()
+
+# Get MongoDB URI from environment variables
+mongo_uri = os.getenv("MONGO_URI")
+uri = mongo_uri
 client = MongoClient(uri)
 db = client["iot_project"]
 collection_names = db.list_collection_names()  # Get list of collection names
