@@ -2,11 +2,11 @@ import pymongo
 from pymongo.mongo_client import MongoClient
 from pymongo import MongoClient
 from datetime import datetime
-from dotenv import load_dotenv
+import dotenv 
 import os
 
 
-load_dotenv()
+dotenv.load_dotenv()
 
 # Get MongoDB URI from environment variables
 mongo_uri = os.getenv("MONGO_URI")
@@ -17,20 +17,8 @@ client = MongoClient(uri)
 db = client["iot_project"]
 data_collection = db["data"]
 current_date = datetime.now().strftime("%d/%m/%Y")
-collection_name = "D6ADA_" + current_date.replace("/", "-")
 # Create a new collection with the current date #
-def create_collection():
-    # Check if the collection already exists
-    if collection_name not in db.list_collection_names():
-        # Create a new collection
-        try:
-            db.create_collection(collection_name)
-            db[collection_name].create_index("rfid_tag", unique=True)
-            print(f"Collection '{collection_name}' created successfully.")
-        except Exception as e:
-            print(f"Error creating collection: {e}")
-    else:
-        print(f"Collection '{collection_name}' already exists.")
+
 
 def get_data(rfid):
     student_info = data_collection.find_one({"rfid": rfid})
@@ -46,14 +34,31 @@ def get_data(rfid):
             "rfid_tag": rfid,
             "timestamp": current_time
         }
-        insert_data(attendance_entry)
+        collection_name = division + "_" + current_date.replace("/", "-")
+        insert_data(attendance_entry , collection_name=collection_name)
     else:
         return "Unknown"
 
 
+def create_collection(collection_name):
+    # Check if the collection already exists
+    if collection_name not in db.list_collection_names():
+        # Create a new collection
+        try:
+            db.create_collection(collection_name)
+            db[collection_name].create_index("rfid_tag", unique=True)
+            print(f"Collection '{collection_name}' created successfully.")
+        except Exception as e:
+            print(f"Error creating collection: {e}")
+    else:
+        print(f"Collection '{collection_name}' already exists.")
+
+
+
+
 # Insert a new document into the collection #
-def insert_data(data):
-    create_collection()
+def insert_data(data , collection_name):
+    create_collection(collection_name=collection_name)
     try:
         # Insert attendance entry into the new collection
         db[collection_name].insert_one(data)
@@ -61,9 +66,6 @@ def insert_data(data):
     except pymongo.errors.DuplicateKeyError:
         print("Attendance already recorder for ", data["name"])
 
-
-
-get_data(1234)
 
 
 
